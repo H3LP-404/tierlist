@@ -88,7 +88,7 @@ function renderCard() {
   if (!fn) {
     wrap.innerHTML = `<div class="empty-stage">${
       !allImgs.length
-        ? `Drop images into:<br><b style="font-size:9px;word-break:break-all">${esc(debugPaths.images || 'images/')}</b><br><br>then click 🔄 Reload`
+        ? `Drop images into:<br><b style="font-size:9px;word-break:break-all">${esc(debugPaths.images || 'Documents\\TierList\\images')}</b><br><br>then click 🔄 Reload`
         : 'All images shown!<br>Click <b>Finish ✓</b>'
     }</div>`;
     hint.textContent = '';

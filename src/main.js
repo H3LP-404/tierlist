@@ -4,20 +4,15 @@ const fs    = require('fs');
 
 const SUPPORTED = new Set(['.jpg','.jpeg','.png','.gif','.webp','.bmp','.svg','.avif']);
 
-// For a portable exe, process.execPath is the actual exe location.
-// app.getPath('exe') is the same. We want the folder containing the exe.
+// Store everything in Documents\TierList — stable, user-accessible, never a temp folder
 const BASE_DIR   = app.isPackaged
-  ? path.dirname(app.getPath('exe'))
+  ? path.join(app.getPath('documents'), 'TierList')
   : path.join(__dirname, '..');
 const IMAGES_DIR = path.join(BASE_DIR, 'images');
 const SAVE_FILE  = path.join(BASE_DIR, 'tierlist_save.json');
 
-// Always create the images folder next to the exe on startup
-try {
-  if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true });
-} catch(e) {
-  // If we can't create it (e.g. permissions), we'll show an error in the UI
-}
+// Create Documents\TierList\images on first run
+try { fs.mkdirSync(IMAGES_DIR, { recursive: true }); } catch(e) {}
 
 function scanImages() {
   return fs.readdirSync(IMAGES_DIR)
@@ -38,8 +33,6 @@ ipcMain.handle('get-paths', () => ({
   base: BASE_DIR,
   images: IMAGES_DIR,
   save: SAVE_FILE,
-  execPath: process.execPath,
-  exePath: app.getPath('exe'),
 }));
 
 ipcMain.handle('get-state', () => {
@@ -92,7 +85,6 @@ ipcMain.handle('export-png', async (_, pngDataUrl) => {
   return filePath;
 });
 
-// Read an image file as a data URL (for display in the renderer)
 ipcMain.handle('read-image', (_, filename) => {
   const safe = path.basename(filename);
   const full  = path.join(IMAGES_DIR, safe);
@@ -105,7 +97,6 @@ ipcMain.handle('read-image', (_, filename) => {
   return `data:${mime};base64,${data}`;
 });
 
-// Watch images folder and notify renderer of changes
 let watcher = null;
 function setupWatcher(win) {
   if (watcher) watcher.close();
@@ -130,7 +121,6 @@ function createWindow() {
 
   win.loadFile(path.join(__dirname, 'index.html'));
   setupWatcher(win);
-
   win.on('closed', () => { if (watcher) watcher.close(); });
 }
 
