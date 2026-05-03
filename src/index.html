@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'self'">
+<title>Tier List</title>
+<style>
+  :root{--bg:#0f0f0f;--surface:#1a1a1a;--surface2:#222;--surface3:#2a2a2a;--border:#333;--border2:#444;--text:#e8e6e0;--text2:#888;--text3:#555;--accent:#c8a96e;--accent2:#a07840;--radius:6px;--tier-h:100px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;user-select:none;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface);height:52px;flex-shrink:0;-webkit-app-region:drag;}
+  .logo{font-size:19px;letter-spacing:.07em;color:var(--accent);font-style:italic;}
+  .hdr-r{display:flex;gap:8px;align-items:center;-webkit-app-region:no-drag;}
+  button{cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:var(--radius);padding:6px 12px;font-size:12px;font-family:'Georgia',serif;transition:background .15s,border-color .15s;white-space:nowrap;}
+  button:hover{background:var(--surface3);border-color:var(--accent2);}
+  button.primary{background:var(--accent2);border-color:var(--accent);color:#fff;font-weight:bold;}
+  button.primary:hover{background:var(--accent);}
+  button.danger{border-color:#7a2020;color:#e08080;}
+  button.danger:hover{background:#2a1010;}
+  .app{display:flex;flex:1;overflow:hidden;}
+
+  /* Left panel */
+  .left{width:230px;min-width:210px;display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface);}
+  .stage{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .slbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);align-self:flex-start;}
+  .cur-card{width:172px;height:172px;border-radius:8px;overflow:hidden;border:1px solid var(--border2);background:var(--surface2);cursor:grab;position:relative;flex-shrink:0;transition:border-color .15s;}
+  .cur-card:hover{border-color:var(--accent2);}
+  .cur-card.dragging{opacity:.35;cursor:grabbing;}
+  .cur-card img{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block;}
+  .cur-card .cname{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.82));color:#fff;font-size:10px;padding:14px 6px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:sans-serif;}
+  .empty-stage{width:172px;height:172px;border-radius:8px;border:2px dashed var(--border2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--text2);font-size:11px;text-align:center;padding:14px;line-height:1.7;}
+  .shint{font-size:11px;color:var(--text3);text-align:center;min-height:16px;}
+
+  .prog-wrap{padding:10px 16px;border-bottom:1px solid var(--border);}
+  .prog-row{font-size:11px;color:var(--text2);margin-bottom:5px;display:flex;justify-content:space-between;}
+  .prog-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+  .prog-fill{height:100%;background:var(--accent2);border-radius:2px;transition:width .3s ease;}
+
+  .qlbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);padding:10px 16px 6px;}
+  .qlist{flex:1;overflow-y:auto;padding:0 10px 8px;display:flex;flex-direction:column;gap:3px;}
+  .qlist::-webkit-scrollbar{width:3px;}
+  .qlist::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+  .qi{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:4px;}
+  .qi:hover{background:var(--surface2);}
+  .qthumb{width:34px;height:34px;border-radius:3px;object-fit:cover;flex-shrink:0;border:1px solid var(--border);}
+  .qname{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;font-family:sans-serif;}
+  .qnum{font-size:10px;color:var(--text3);flex-shrink:0;}
+
+  .lbot{border-top:1px solid var(--border);padding:10px;display:flex;flex-direction:column;gap:6px;}
+  .nxtbtn{width:100%;padding:9px;font-size:13px;}
+
+  /* Main / tiers */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+  .twrap{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:5px;}
+  .twrap::-webkit-scrollbar{width:4px;}
+  .twrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+  .tbar{border-top:1px solid var(--border);padding:8px 14px;display:flex;gap:8px;background:var(--surface);flex-shrink:0;align-items:center;}
+
+  .tier{display:flex;min-height:var(--tier-h);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface);transition:border-color .15s,background .15s;}
+  .tier.drag-over{border-color:var(--accent)!important;background:rgba(200,169,110,.06);}
+  .tlbl{width:66px;min-width:66px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;font-style:italic;cursor:pointer;position:relative;flex-shrink:0;}
+  .tlbl:hover .ehint{opacity:1;}
+  .ehint{position:absolute;bottom:4px;font-size:8px;letter-spacing:.1em;font-style:normal;opacity:0;transition:opacity .15s;color:rgba(255,255,255,.4);}
+  .timgs{flex:1;display:flex;flex-wrap:wrap;gap:5px;padding:8px;align-content:flex-start;min-height:var(--tier-h);}
+  .tside{display:flex;flex-direction:column;gap:3px;padding:5px 4px;justify-content:center;background:var(--surface2);border-left:1px solid var(--border);opacity:0;transition:opacity .15s;flex-shrink:0;}
+  .tier:hover .tside{opacity:1;}
+  .tside button{padding:2px 6px;font-size:12px;border-color:transparent;background:transparent;}
+
+  /* Placed image cards */
+  .icard{width:72px;height:72px;border-radius:4px;overflow:hidden;border:1px solid var(--border);position:relative;flex-shrink:0;transition:transform .1s;}
+  .icard:hover{transform:scale(1.06);z-index:2;border-color:var(--border2);}
+  .icard img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+  .icard .pn{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.8));color:#fff;font-size:8px;padding:8px 3px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .15s;font-family:sans-serif;}
+  .icard:hover .pn{opacity:1;}
+  .icard .rm{position:absolute;top:2px;right:2px;width:14px;height:14px;border-radius:50%;background:rgba(0,0,0,.75);color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;cursor:pointer;border:none;padding:0;line-height:1;}
+  .icard:hover .rm{opacity:1;}
+
+  /* Drag ghost */
+  #ghost{position:fixed;pointer-events:none;z-index:9999;width:110px;height:110px;border-radius:8px;overflow:hidden;border:2px solid var(--accent);box-shadow:0 10px 30px rgba(0,0,0,.6);transform:translate(-50%,-50%) rotate(2deg) scale(1.05);display:none;}
+  #ghost img{width:100%;height:100%;object-fit:cover;display:block;}
+
+  /* Edit modal */
+  .mbg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:100;}
+  .mbg.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:24px;min-width:310px;max-width:420px;width:90vw;}
+  .modal h3{font-size:15px;margin-bottom:14px;color:var(--accent);font-style:italic;}
+  .modal input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:15px;padding:8px 11px;font-family:'Georgia',serif;margin-bottom:12px;}
+  .modal input:focus{outline:none;border-color:var(--accent2);}
+  .crow{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap;}
+  .sw{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .1s,transform .1s;}
+  .sw.sel,.sw:hover{border-color:#fff;transform:scale(1.18);}
+  .ma{display:flex;gap:8px;justify-content:flex-end;}
+
+  /* Completion */
+  .comp{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:flex-start;z-index:50;overflow-y:auto;padding:36px 24px;}
+  .comp.open{display:flex;}
+  .chdr{text-align:center;margin-bottom:28px;}
+  .chdr h2{font-size:30px;color:var(--accent);font-style:italic;margin-bottom:6px;}
+  .chdr p{color:var(--text2);font-size:13px;}
+  .ctiers{width:100%;max-width:860px;display:flex;flex-direction:column;gap:5px;}
+  .ctier{display:flex;min-height:86px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface);}
+  .ctlbl{width:66px;min-width:66px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;font-style:italic;}
+  .ctimgs{flex:1;display:flex;flex-wrap:wrap;gap:5px;padding:8px;align-content:flex-start;}
+  .cimg{width:68px;height:68px;border-radius:4px;object-fit:cover;border:1px solid var(--border);}
+  .cacts{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;justify-content:center;}
+  .cacts button{padding:10px 20px;font-size:13px;}
+
+  /* Changed banner */
+  #changed-bar{display:none;background:#1a3a1a;color:#8fcc8f;font-size:12px;text-align:center;padding:6px;cursor:pointer;flex-shrink:0;}
+
+  /* Toast */
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface3);border:1px solid var(--border2);color:var(--text);padding:8px 18px;border-radius:20px;font-size:12px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;}
+  #toast.show{opacity:1;}
+  #ec{display:none;}
+</style>
+</head>
+<body>
+
+<div id="changed-bar" onclick="reloadImages()">📁 Images folder changed — click to reload</div>
+
+<header>
+  <span class="logo">Tier List</span>
+  <div class="hdr-r">
+    <span id="hinfo" style="font-size:11px;color:var(--text2)"></span>
+    <button onclick="window.api.openImagesFolder()">📁 Open Images Folder</button>
+    <button onclick="reloadImages()">🔄 Reload</button>
+    <button onclick="exportPNG()">⬇ Export PNG</button>
+    <button onclick="resetSession()" class="danger">↺ Restart</button>
+  </div>
+</header>
+
+<div class="app">
+  <div class="left">
+    <div class="stage">
+      <div class="slbl">Now placing</div>
+      <div id="curwrap"></div>
+      <div class="shint" id="shint"></div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-row"><span id="ptxt">0 / 0</span><span id="ppct">0%</span></div>
+      <div class="prog-bar"><div class="prog-fill" id="pfill" style="width:0%"></div></div>
+    </div>
+    <div class="qlbl">Up next</div>
+    <div class="qlist" id="qlist"></div>
+    <div class="lbot">
+      <button class="nxtbtn primary" id="nxtbtn" onclick="nextImage()">Next →</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="twrap" id="twrap"></div>
+    <div class="tbar">
+      <button onclick="addTier()" class="primary">+ Add Tier</button>
+      <button onclick="clearPlacements()" class="danger">Clear Placements</button>
+      <span style="flex:1"></span>
+      <span style="font-size:11px;color:var(--text3)">Drag the card into a tier · Double-click label to rename</span>
+    </div>
+  </div>
+</div>
+
+<!-- Completion screen -->
+<div class="comp" id="comp">
+  <div class="chdr"><h2>All done!</h2><p id="csub"></p></div>
+  <div class="ctiers" id="ctiers"></div>
+  <div class="cacts">
+    <button class="primary" onclick="exportPNG()">⬇ Export PNG</button>
+    <button onclick="resetSession()">↺ Start Over</button>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="mbg" id="emodal">
+  <div class="modal">
+    <h3>Edit Tier</h3>
+    <input type="text" id="elbl" maxlength="6" placeholder="Label (e.g. S, A, B…)">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:7px">Colour</div>
+    <div class="crow" id="crow"></div>
+    <div class="ma">
+      <button onclick="closeModal()">Cancel</button>
+      <button class="primary" onclick="confirmEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="ghost"><img id="gimg" src="" alt=""></div>
+<div id="toast"></div>
+<canvas id="ec"></canvas>
+
+<script src="renderer.js"></script>
+</body>
+</html>

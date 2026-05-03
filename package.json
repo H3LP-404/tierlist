@@ -1,0 +1,26 @@
+{
+  "name": "tierlist",
+  "version": "1.0.0",
+  "description": "Tier List Desktop App",
+  "main": "src/main.js",
+  "scripts": {
+    "build-win": "electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.tierlist.app",
+    "productName": "Tier List",
+    "directories": { "output": "dist" },
+    "win": {
+      "target": "portable",
+      "icon": "src/icon.ico"
+    },
+    "portable": {
+      "artifactName": "TierList.exe"
+    },
+    "files": ["src/**/*"]
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}
