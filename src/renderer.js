@@ -5,7 +5,10 @@ let S = { tiers:[], queue:[], currentIdx:-1, nextTierId:10 };
 let allImgs = [];
 const imgCache = {}; // filename -> data URL
 
+let debugPaths = {};
+
 async function init() {
+  debugPaths = await window.api.getPaths();
   const d = await window.api.getState();
   allImgs = d.images;
   S = d.state;
@@ -85,7 +88,7 @@ function renderCard() {
   if (!fn) {
     wrap.innerHTML = `<div class="empty-stage">${
       !allImgs.length
-        ? 'Drop images into the<br><b>images/</b> folder then<br>click 🔄 Reload'
+        ? `Drop images into:<br><b style="font-size:9px;word-break:break-all">${esc(debugPaths.images || 'images/')}</b><br><br>then click 🔄 Reload`
         : 'All images shown!<br>Click <b>Finish ✓</b>'
     }</div>`;
     hint.textContent = '';

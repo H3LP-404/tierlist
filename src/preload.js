@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
+  getPaths:         ()       => ipcRenderer.invoke('get-paths'),
   getState:         ()       => ipcRenderer.invoke('get-state'),
   saveState:        (data)   => ipcRenderer.invoke('save-state', data),
   scanImages:       ()       => ipcRenderer.invoke('scan-images'),

@@ -4,14 +4,20 @@ const fs    = require('fs');
 
 const SUPPORTED = new Set(['.jpg','.jpeg','.png','.gif','.webp','.bmp','.svg','.avif']);
 
-// Images folder lives next to the exe (or next to main.js in dev)
+// For a portable exe, process.execPath is the actual exe location.
+// app.getPath('exe') is the same. We want the folder containing the exe.
 const BASE_DIR   = app.isPackaged
-  ? path.dirname(process.execPath)
+  ? path.dirname(app.getPath('exe'))
   : path.join(__dirname, '..');
 const IMAGES_DIR = path.join(BASE_DIR, 'images');
 const SAVE_FILE  = path.join(BASE_DIR, 'tierlist_save.json');
 
-if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true });
+// Always create the images folder next to the exe on startup
+try {
+  if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true });
+} catch(e) {
+  // If we can't create it (e.g. permissions), we'll show an error in the UI
+}
 
 function scanImages() {
   return fs.readdirSync(IMAGES_DIR)
@@ -28,6 +34,14 @@ function writeSave(data) {
 }
 
 // ── IPC handlers ────────────────────────────────────────────────────────────
+ipcMain.handle('get-paths', () => ({
+  base: BASE_DIR,
+  images: IMAGES_DIR,
+  save: SAVE_FILE,
+  execPath: process.execPath,
+  exePath: app.getPath('exe'),
+}));
+
 ipcMain.handle('get-state', () => {
   const images = scanImages();
   const saved  = loadSave();
